@@ -1,0 +1,77 @@
+.root {
+    -fx-background-color: #333232;
+}
+
+.tab-pane .tab-header-area .tab-header-background {
+    -fx-opacity: 0;
+}
+
+.tab-pane {
+    -fx-tab-min-width:90px;
+}
+
+.tab {
+    -fx-background-insets: 0 1 0 1,0,0;
+}
+.tab-pane .tab {
+    -fx-background-color: #333232;
+}
+
+.tab-pane .tab:selected {
+    -fx-background-color: #292828;
+}
+
+.tab .tab-label {
+    -fx-alignment: CENTER;
+    -fx-text-fill: #828282;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.tab:selected .tab-label {
+    -fx-alignment: CENTER;
+    -fx-text-fill: #FFFFFF;
+}
+
+.menu-bar{
+    -fx-background-color: #333232;
+}
+.menu{
+    -fx-text-fill: #FFFFFF;
+    -fx-background-color: #333232;
+}
+.context-menu {
+    -fx-background-color: #333232;
+    -fx-background-insets: 0, 1, 2;
+    -fx-background-radius: 0 6 6 6, 0 5 5 5, 0 4 4 4;
+/*    -fx-padding: 0.666667em 0.083333em 0.666667em 0.083333em;  8 1 8 1 */
+    -fx-padding: 0.333333em 0.083333em 0.666667em 0.083333em; /* 4 1 8 1 */
+}
+.menu:hover{
+    -fx-background-color: #292828;
+}
+.menu .label{
+    -fx-text-fill: #FFFFFF;
+}
+
+.menu-item {
+    -fx-text-fill: #FFFFFF;
+    -fx-background-color: #333232;
+}
+.menu-item:hover {
+    -fx-background-color: #292828;
+}
+.list-cell:filled:selected:focused, .list-cell:filled:selected {
+    -fx-background-color: linear-gradient(#328BDB 0%, #207BCF 25%, #1973C9 75%, #0A65BF 100%);
+    -fx-text-fill: white;
+}
+
+.list-cell {
+    -fx-text-fill: white;
+    -fx-background-color: #333232;
+}
+
+.list-cell:hover {
+    -fx-background-color: #292828;
+    -fx-text-fill: white;
+}
