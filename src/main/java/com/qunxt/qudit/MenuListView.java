@@ -1,22 +1,25 @@
 package com.qunxt.qudit;
 
-
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.EventHandler;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
+import javafx.geometry.Insets;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.util.Callback;
 
 import javax.swing.filechooser.FileSystemView;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 import static com.qunxt.qudit.ScreenUtil.getMenuWidth;
@@ -24,27 +27,10 @@ import static com.qunxt.qudit.ScreenUtil.screenHeight;
 import static com.qunxt.qudit.TextAreaView.loadFileToTextArea;
 
 public class MenuListView {
-
     static Map<String, File> nameToFile = new HashMap<>();
-    static List<String> ls = new ArrayList<>();
-
-    private static class AttachmentListCell extends ListCell<String> {
-        @Override
-        public void updateItem(String item, boolean empty) {
-            super.updateItem(item, empty);
-            if (empty) {
-                setGraphic(null);
-                setText(null);
-            } else {
-                Image fxImage = getFileIcon(item);
-                ImageView imageView = new ImageView(fxImage);
-                setGraphic(imageView);
-                setText(item);
-            }
-        }
-    }
-
-    static HashMap<String, Image> mapOfFileExtToSmallIcon = new HashMap<String, Image>();
+    static List<File> ls = new ArrayList<>();
+    static File parent = null;
+    static Map<String, Image> mapOfFileExtToSmallIcon = new HashMap<String, Image>();
 
     private static String getFileExt(String fname) {
         String ext = ".";
@@ -84,52 +70,158 @@ public class MenuListView {
         return SwingFXUtils.toFXImage(bufferedImage, null);
     }
 
-    VBox buildListView(File[] files) {
-        ListView<String> listView = new ListView<>();
+    int getDistance(File root) {
+        if(root == parent || root == null)    return 0;
+        return 1 + getDistance(root.getParentFile());
+    }
 
-        Arrays.stream(files).forEach(file -> {
+    public TreeItem<File> getNodesForDirectory(File directory) {
+        TreeItem<File> root = new TreeItem<File>(directory);
+        for(File f : directory.listFiles()) {
+            System.out.println("Loading " + f.getName());
+            if(f.isDirectory()) { //Then we call the function recursively
+                root.getChildren().add(getNodesForDirectory(f));
+            } else {
+                root.getChildren().add(new TreeItem<File>(f));
+            }
+        }
+        return root;
+    }
+
+    private static String pathToString(Path p) {
+        if (p == null) {
+            return "null";
+        } else if (p.getFileName() == null) {
+            return p.toString();
+        }
+        return p.getFileName().toString();
+    }
+
+    VBox buildListView(File root) {
+        parent = root;
+
+        TreeView<Path> listView = new TreeView<>(new TreeItem<>());
+        Arrays.stream(Objects.requireNonNull(root.listFiles())).forEach(file -> {
             try {
                 nameToFile.put(file.getName(), file);
-                ls.add(file.getName());
+                ls.add(file);
             } catch (Exception e) {
             }
         });
-        ObservableList<String> data = FXCollections.observableList(ls);
-
+        listView.setEditable(true);
         listView.setMinHeight(screenHeight);
-        listView.setMaxWidth(getMenuWidth());
 
         //Creating the layout
         VBox layout = new VBox();
         layout.getChildren().addAll(listView);
         VBox.setVgrow(listView, Priority.ALWAYS);
 
-        listView.setItems(data);
-        listView.setCellFactory(new Callback<ListView<String>, ListCell<String>>() {
-            @Override
-            public ListCell<String> call(ListView<String> list) {
-                return new AttachmentListCell();
-            }
-        });
+        listView.setShowRoot(false);
+        listView.setCellFactory(LazyTreeCell.forTreeView("Loading...", MenuListView::pathToString));
+        TreeViewUtils.installSelectionBugWorkaround(listView);
+
+        for (File f: Objects.requireNonNull(root.listFiles())) {
+            listView.getRoot().getChildren().add(f.isDirectory()
+                    ? new LoadingTreeItem<>(f.toPath(), new DirectoryLoader(f))
+                    : new TreeItem<>(f.toPath()));
+        }
+
+//        listView.setCellFactory(lv -> new TreeCell<File>() {
+//            private TextField textField = new TextField() ;
+//
+//            {
+//                textField.setOnAction(e -> {
+//                    commitEdit(getItem());
+//                });
+//                textField.addEventFilter(KeyEvent.KEY_RELEASED, e -> {
+//                    if (e.getCode() == KeyCode.ESCAPE) {
+//                        cancelEdit();
+//                    }
+//                });
+//            }
+//
+//            @Override
+//            protected void updateItem(File person, boolean empty) {
+//                super.updateItem(person, empty);
+//                if (empty) {
+//                    setText(null);
+//                    setGraphic(null);
+//                } else if (isEditing()) {
+//                    textField.setText(person.getName());
+//                    setText(null);
+//                    setGraphic(textField);
+//                } else {
+//                    Image fxImage = getFileIcon(person.getName());
+//                    ImageView imageView = new ImageView(fxImage);
+//
+//                    VBox vb = new VBox(imageView);
+////                    vb.setPadding(new Insets(0, 0, 0, 10));
+//                    int distance = getDistance(person.getParentFile());
+//                    System.out.println(distance);
+//                    VBox.setMargin( vb, new Insets( 0, 0, 0, 10 * distance ) );
+//                    setGraphic(vb);
+//                    setText(person.getName());
+//                }
+//            }
+//
+//            @Override
+//            public void startEdit() {
+//                super.startEdit();
+//                textField.setText(getItem().getName());
+//                setText(null);
+//                setGraphic(textField);
+//                textField.selectAll();
+//                textField.requestFocus();
+//            }
+//
+//            @Override
+//            public void cancelEdit() {
+//                super.cancelEdit();
+//                setText(getItem().getName());
+//                setGraphic(null);
+//            }
+//
+//            @Override
+//            public void commitEdit(File person) {
+//                super.commitEdit(person);
+//                Path source = person.toPath();
+//                try {
+//                    Files.move(source, source.resolveSibling(textField.getText()));
+//                } catch (IOException e) {
+//                    throw new RuntimeException(e);
+//                }
+//                setText(textField.getText());
+//                setGraphic(null);
+//            }
+//        });
 
         listView.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
                 System.out.println("clicked on " + listView.getSelectionModel().getSelectedItem());
-                File selectedFile = nameToFile.getOrDefault(listView.getSelectionModel().getSelectedItem(), null);
-                if(selectedFile == null)    return;
+                File selectedFile = listView.getSelectionModel().getSelectedItem().getValue().toFile();
 
                 if(selectedFile.isDirectory()) {
-                    int idx = ls.indexOf(selectedFile.getName());
-                    List<String> tlist = new ArrayList<>();
-                    Arrays.stream(selectedFile.listFiles()).sequential().forEach(file -> {
-                        tlist.add(file.getName());
-                        nameToFile.put(file.getName() ,file);
-                    });
-                    ls.addAll(idx+1, tlist);
-                    listView.setItems(FXCollections.observableList(ls));
-                }
-                else {
+//                    System.out.println("is a directory");
+//                    int idx = ls.indexOf(selectedFile);
+//                    List<File> tlist = new ArrayList<>();
+//
+//                    Arrays.stream(Objects.requireNonNull(selectedFile.listFiles())).sequential().forEach(file -> {
+//                        if(!nameToFile.containsKey(file.getName())) {
+//                            nameToFile.put(file.getName(), file);
+//                        }
+//                        tlist.add(file);
+//                    });
+//
+//                    if(ls.containsAll(tlist)) {
+//                        System.out.println("exist already");
+//                        ls.removeAll(tlist);
+//                    } else {
+//                        System.out.println("adding ");
+//                        ls.addAll(idx + 1, tlist);
+//                    }
+//                    listView.setItems(FXCollections.observableList(ls));
+                } else {
                     loadFileToTextArea(selectedFile);
                 }
             }

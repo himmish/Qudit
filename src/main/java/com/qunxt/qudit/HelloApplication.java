@@ -1,6 +1,8 @@
 package com.qunxt.qudit;
 
 import javafx.application.Application;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.Event;
 import javafx.geometry.Side;
 import javafx.scene.Scene;
@@ -41,8 +43,7 @@ public class HelloApplication extends Application {
         MenuItem m2 = new MenuItem("Open");
         m2.setOnAction(e -> {
             File selectedDirectory = directoryChooser.showDialog(stage);
-            File[] files = selectedDirectory.listFiles();
-            projectTab.setContent(menuListView.buildListView(files));
+            projectTab.setContent(menuListView.buildListView(selectedDirectory));
         });
 
         MenuItem m3 = new MenuItem("Recent Projects");
@@ -75,7 +76,7 @@ public class HelloApplication extends Application {
     }
     EventHandler<Event> replaceBackgroundColorHandler = event -> {
         Tab currentTab = (Tab) event.getTarget();
-        System.out.println(currentTab.getText()+"" +currentTab.isSelected());
+        System.out.println(currentTab.getText() + currentTab.isSelected());
     };
     public Tab buildTab(TAB tabType) {
         Tab tab = new Tab();
@@ -95,13 +96,13 @@ public class HelloApplication extends Application {
         }
         return tab;
     }
+
+    TabPane tabPane = new TabPane();
     @Override
     public void start(Stage stage) throws IOException {
         stage.setTitle("Qudit");
 
         VBox vb = new VBox(buildMenuBar(stage));
-
-        TabPane tabPane = new TabPane();
         tabPane.setSide(Side.LEFT);
 
         projectTab = buildTab(TAB.PROJECT);
@@ -115,6 +116,15 @@ public class HelloApplication extends Application {
         SplitPane leftRightSplitPane = new SplitPane();
         leftRightSplitPane.minHeight(screenHeight);
         leftRightSplitPane.maxWidth(getMenuWidth());
+        stage.showingProperty().addListener(new ChangeListener<>() {
+            @Override
+            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+                if (newValue) {
+                    leftRightSplitPane.setDividerPositions(0.1);
+                    observable.removeListener(this);
+                }
+            }
+        });
 
         leftRightSplitPane.getItems().add(tabPane);
         leftRightSplitPane.getItems().add(textArea);

@@ -5,8 +5,6 @@ module com.qunxt.qudit {
     requires javafx.fxml;
     requires javafx.swing;
 
-    requires org.kordamp.bootstrapfx.core;
-    requires jfoenix;
     requires org.apache.commons.lang3;
     requires java.desktop;
 

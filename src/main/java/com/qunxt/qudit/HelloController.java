@@ -1,29 +1,6 @@
 package com.qunxt.qudit;
 
-import com.jfoenix.controls.JFXTabPane;
-import javafx.event.Event;
-import javafx.event.EventHandler;
-import javafx.fxml.FXML;
-import javafx.geometry.Insets;
-import javafx.scene.control.Label;
-import javafx.scene.control.Tab;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.text.TextAlignment;
-
 public class HelloController {
-    @FXML
-    private JFXTabPane tabContainer;
-
-    @FXML
-    private Tab userProfileTab;
-
-    @FXML
-    private Tab settingsTab;
-
-    @FXML
-    private Tab logoutTab;
 
     /// 2.
     private double tabWidth = 90.0;
