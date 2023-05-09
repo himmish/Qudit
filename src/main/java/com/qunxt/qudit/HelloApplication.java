@@ -115,7 +115,7 @@ public class HelloApplication extends Application {
 
         SplitPane leftRightSplitPane = new SplitPane();
         leftRightSplitPane.minHeight(screenHeight);
-        leftRightSplitPane.maxWidth(getMenuWidth());
+        leftRightSplitPane.minWidth(screenWidth);
         stage.showingProperty().addListener(new ChangeListener<>() {
             @Override
             public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
@@ -126,6 +126,8 @@ public class HelloApplication extends Application {
             }
         });
 
+        tabPane.setMinWidth(getMenuWidth());
+        tabPane.maxWidth(screenWidth);
         leftRightSplitPane.getItems().add(tabPane);
         leftRightSplitPane.getItems().add(textArea);
 
